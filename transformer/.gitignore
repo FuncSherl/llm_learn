@@ -3,3 +3,5 @@ datas/*.de
 datas/**/*.en
 datas/**/*.de
 datas/**/*.vi
+datas/**/*.en-de
+datas/**/*.en-vi
