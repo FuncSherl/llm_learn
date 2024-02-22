@@ -1,2 +1,5 @@
 datas/*.en
 datas/*.de
+datas/**/*.en
+datas/**/*.de
+datas/**/*.vi

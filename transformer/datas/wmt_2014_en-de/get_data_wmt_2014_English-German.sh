@@ -11,3 +11,9 @@ cat newstest{2012,2013}.en >dev.en
 cat newstest{2012,2013}.de >dev.de
 cp newstest2014.en test.en
 cp newstest2014.de test.de
+
+# other datas, not necessary
+wget "https://nlp.stanford.edu/projects/nmt/data/wmt14.en-de/vocab.50K.en"
+wget "https://nlp.stanford.edu/projects/nmt/data/wmt14.en-de/vocab.50K.de"
+
+wget "https://nlp.stanford.edu/projects/nmt/data/wmt14.en-de/dict.en-de"
