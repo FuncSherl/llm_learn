@@ -34,4 +34,5 @@ $$
 \ddot{a}
 $$
 
+A &rarr; B
 
