@@ -12,7 +12,6 @@ def dot_product_attention(q, k, v):
     tep = F.softmax(tep)
     return pt.matmul(tep, v)
 
-
 def multi_head_attention(q, k, v, dk, dv, headnum):
     qall = [nn.Linear(q.shape[-1], dk, bias=False)(q) for x in range(headnum)]
     kall = [nn.Linear(k.shape[-1], dk, bias=False)(k) for x in range(headnum)]
