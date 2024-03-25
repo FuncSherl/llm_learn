@@ -77,15 +77,3 @@ class FeedForward(nn.Module):
 #     hidden = nn.Linear(x.shape[-1], dff, bias=True)(x)
 #     relu = nn.ReLU()(hidden)
 #     return nn.Linear(dff, x.shape[-1], bias=True)(relu)
-
-
-def getPosEncoding(pos, dmodel):
-    assert dmodel % 2 == 0, "dmodel%2 should be 0"
-    poss = pt.arange(pos).unsqueeze(1)  # size=(pos,1)
-    dims_half = pt.arange(0, dmodel, 2)  # size = (dmodel//2) 0, 2, 4...
-    ret = pt.zeros(pos, dmodel)
-
-    div_num = pt.exp(dims_half / -dmodel * math.log(10000))
-    ret[:, 0::2] = pt.sin(poss * div_num)  # size = (pos, dmodel//2)
-    ret[:, 1::2] = pt.cos(poss * div_num)
-    return ret
