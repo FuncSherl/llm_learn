@@ -57,7 +57,7 @@ class Transformer(nn.Module):
         self.last_out = None
 
         # pre softmax linear
-        self.pre_softmax_linear = nn.Linear(self.dmodel, self.dmodel, False)
+        self.pre_softmax_linear = nn.Linear(self.dmodel, self.dictsize, True)
 
         # softmax
         self.softmax = nn.Softmax(dim=-1)
@@ -81,3 +81,9 @@ class Transformer(nn.Module):
         ret[:, 0::2] = pt.sin(poss * div_num)  # size = (pos, dmodel//2)
         ret[:, 1::2] = pt.cos(poss * div_num)
         return ret
+    
+    def getMask(self, dims):
+        tep = np.ones([dims, dims], dtype=np.int32)
+        tril = np.tril(tep, 0)
+        
+        return pt.from_numpy(tril)
