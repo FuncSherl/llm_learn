@@ -27,11 +27,12 @@ class MultiHeadAttention(nn.Module):
         )
 
     @staticmethod
-    def dot_product_attention(q, k, v):
+    def dot_product_attention(q, k, v, mask = None, mask_val = -1e9):
         tep = pt.matmul(q, k.t())
         dk_sqr = pt.sqrt(k.shape[-1])
-
         tep = tep / dk_sqr
+        if mask:
+            tep = tep.masked_fill(mask, mask_val)
         tep = F.softmax(tep)
         return pt.matmul(tep, v)
 

@@ -70,6 +70,7 @@ class Transformer(nn.Module):
         decoder_out = self.decoder(self.last_out, encoder_kvs)
         decoder_out_logit = self.pre_softmax_linear(decoder_out)
         prob = self.softmax(decoder_out_logit)
+        return prob
 
     def getPosEncoding(self):
         assert self.dmodel % 2 == 0, "dmodel%2 should be 0"
@@ -81,9 +82,15 @@ class Transformer(nn.Module):
         ret[:, 0::2] = pt.sin(poss * div_num)  # size = (pos, dmodel//2)
         ret[:, 1::2] = pt.cos(poss * div_num)
         return ret
-    
-    def getMask(self, dims):
-        tep = np.ones([dims, dims], dtype=np.int32)
-        tril = np.tril(tep, 0)
-        
+
+    def getAtteMask(self, dims):
+        tep = np.ones([dims, dims], dtype=np.uint8)
+        tril = np.tril(tep, 0) == 0
+
         return pt.from_numpy(tril)
+
+    def getPadMask(self, batch_lens):
+        tep = np.ones([len(batch_lens), self.seqlen], dtype=np.uint8)
+        for ind, val in enumerate(batch_lens):
+            tep[ind, val:] = 0
+        return pt.from_numpy(tep == 1)
