@@ -28,7 +28,7 @@ class WMT2014EN2DE:
                 dst_dict_set = [x.strip() for x in f.readlines()]
         else:
             raise LookupError(
-                "can't find follow dict files: \n%s\n%s" % (src_dict_p, dst_dict_p)
+                "can't find one or more follow dict files: \n%s\n%s" % (src_dict_p, dst_dict_p)
             )
             """
             重新生成dict的耗时非常久,这里推荐使用shell:
