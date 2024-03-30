@@ -15,8 +15,8 @@ WMT_2014_EN2DE_DEV = {
 }
 
 WMT_2014_EN2DE_DICT = {
-    "src": "../datas/WMT_2014_en-de/vocab.all.en",
-    "dst": "../datas/WMT_2014_en-de/vocab.all.de",
+    "src": "../datas/WMT_2014_en-de/vocab.50K.en",
+    "dst": "../datas/WMT_2014_en-de/vocab.50K.de",
 }
 
 # IWSLT dataset - EN2VI(英语->越南语)
@@ -33,8 +33,8 @@ IWSLT_15_EN2VI_DEV = {
     "dst": "../datas/IWSLT_15_en-vi/dev.de",
 }
 IWSLT_15_EN2VI_DICT = {
-    "src": "../datas/IWSLT_15_en-vi/vocab.all.en",
-    "dst": "../datas/IWSLT_15_en-vi/vocab.all.de",
+    "src": "../datas/IWSLT_15_en-vi/vocab.50K.en",
+    "dst": "../datas/IWSLT_15_en-vi/vocab.50K.de",
 }
 
 # train configs
