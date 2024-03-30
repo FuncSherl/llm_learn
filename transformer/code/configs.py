@@ -39,3 +39,4 @@ IWSLT_15_EN2VI_DICT = {
 
 # train configs
 BATCHSIZE = 10000
+SPECIALKEYS=["<unk>", "<s>", "</s>", "<pad>"]
