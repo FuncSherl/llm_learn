@@ -29,6 +29,7 @@ class Transformer(nn.Module):
         dictsize=DICTSIZE,
         input_maxseqlen=INPUTMAXSEQLEN,
         output_maxseqlen=INPUTMAXSEQLEN,
+        padding_idx = None
     ):
         super(Transformer, self).__init__()
 
@@ -40,10 +41,12 @@ class Transformer(nn.Module):
         self.dictsize = dictsize
         self.input_maxseqlen = input_maxseqlen
         self.output_maxseqlen = output_maxseqlen
+        self.padding_idx = padding_idx
 
         # embedding
-        self.embedding = nn.Embedding(self.dictsize, self.dmodel)
+        self.embedding = nn.Embedding(self.dictsize, self.dmodel, padding_idx=self.padding_idx)
         self.pos_embedding = self.getPosEncoding(self.input_maxseqlen, self.dmodel)
+        self.pos_embedding.requires_grad = False
 
         # encoder
         self.encoder = TransformerEncoder(
@@ -66,25 +69,13 @@ class Transformer(nn.Module):
         
         # attention mask for train to cover back labels
         self.atten_max_mask = self.getAtteMask(self.output_maxseqlen)
+        self.atten_max_mask.requires_grad = False
 
     def forward(self, tokens, label_tokens = None):
-        tep = self.embedding(tokens)
-        tep += self.pos_embedding
-
-        encoder_kvs = self.encoder(tep)
-        
-        # train need mask
-        mask = None
         if self.training:
-            batch_seqlen = label_tokens.shape[-1]
-            mask = self.atten_max_mask[:batch_seqlen, :batch_seqlen]
-            decoder_out = self.decoder(self.last_out, encoder_kvs, mask)
-            
-        decoder_out = self.decoder(self.last_out, encoder_kvs, mask)
-        
-        decoder_out_logit = self.pre_softmax_linear(decoder_out)
-        prob = self.softmax(decoder_out_logit)
-        return prob
+            assert label_tokens != None, "must provide token for decoder when training"
+            return self.forward_train(tokens, label_tokens)
+        return self.forward_test(tokens)
     
     def forward_train(self, src_tokens, decoder_input_tokens):
         tep = self.embedding(src_tokens)
@@ -133,10 +124,12 @@ class Transformer(nn.Module):
 
     @staticmethod
     def getAtteMask(dims):
-        tep = np.ones([dims, dims], dtype=np.uint8)
-        tril = np.tril(tep, 0) == 0
+        tep = pt.ones([dims, dims], dtype=pt.uint8)
+        # Returns the lower triangular part of the matrix (2-D tensor) or batch of matrices input, 
+        # the other elements of the result tensor out are set to 0.
+        tril = pt.tril(tep, 0) == 0
 
-        return pt.from_numpy(tril)
+        return tril
 
     @staticmethod
     def getPadMask(batch_lens, input_maxseqlen):
