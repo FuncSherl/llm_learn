@@ -36,13 +36,13 @@ class MultiHeadAttention(nn.Module):
         tep = F.softmax(tep)
         return pt.matmul(tep, v)
 
-    def forward(self, q, k, v):
+    def forward(self, q, k, v, mask = None):
         qall = [f(q) for f in self.q_linears]
         kall = [f(k) for f in self.k_linears]
         vall = [f(v) for f in self.v_linears]
         # dot product
         headall = [
-            self.dot_product_attention(qall[x], kall[x], vall[x])
+            self.dot_product_attention(qall[x], kall[x], vall[x], mask)
             for x in range(self.headnum)
         ]
         head_cat = pt.cat(headall, dim=-1)

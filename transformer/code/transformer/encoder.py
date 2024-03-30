@@ -25,8 +25,7 @@ class TransformerEncoder(nn.Module):
 
         self.feed_forward = [FeedForward(dmodel, dff) for i in range(self.repeat_num)]
 
-    def forward(self, x):
-        ret = []
+    def forward(self, x):        
         tep = x
         for i in range(self.repeat_num):
             # sublayer 1
@@ -38,5 +37,4 @@ class TransformerEncoder(nn.Module):
             kep = tep
             tep = self.feed_forward[i](tep)
             tep = nn.LayerNorm([self.dmodel])(tep + kep)
-            ret.append(tep)
-        return ret
+        return tep

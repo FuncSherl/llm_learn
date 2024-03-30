@@ -35,18 +35,20 @@ class TransformerDecoder(nn.Module):
 
         self.feed_forward = [FeedForward(dmodel, dff) for i in range(self.repeat_num)]
 
-    def forward(self, x, encoder_kv):
+    def forward(self, x, encoder_kv, mask = None):
         ret = []
         tep = x
         for i in range(self.repeat_num):
             # sublayer 1
             kep = tep
-            tep = self.multhead_att_fir[i](tep, tep, tep)
+            # train need mask
+            tep = self.multhead_att_fir[i](tep, tep, tep, mask)
             tep = nn.LayerNorm([self.dmodel])(tep + kep)
 
             # sublayer 2
             kep = tep
-            tep = self.multhead_att_sec[i](tep, encoder_kv[i], encoder_kv[i])
+            # no need mask
+            tep = self.multhead_att_sec[i](tep, encoder_kv, encoder_kv)
             tep = nn.LayerNorm([self.dmodel])(tep + kep)
 
             # sublayer 3
