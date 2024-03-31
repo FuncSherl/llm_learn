@@ -1,6 +1,6 @@
 from transformer import decoder, encoder, transformer
 from dataloader import wmt_train_dataloader, wmt_test_dataloader, wmt_dev_dataloader
-from configs import WMT_2014_EN2DE_DICT, BATCHSIZE, SPECIALKEYS
+from configs import WMT_2014_EN2DE_DICT, BATCHSIZE, SPECIALKEYS, PADSTR,DMODEL,ENCODER_NUM,DECODER_NUM,HEADNUM,DFF
 import os, logging
 
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
@@ -14,6 +14,15 @@ class WMT2014EN2DE:
 
         self.src_dict_set, self.dst_dict_set = self.init_dict()
 
+        self.src_word2token = self.init_word2token(self.src_dict_set)
+        self.dst_word2token = self.init_word2token(self.dst_dict_set)
+
+        self.src_token2word = self.init_token2word(self.src_dict_set)
+        self.dst_token2word = self.init_token2word(self.dst_dict_set)
+        self.padtoken = self.src_word2token[PADSTR]
+        
+        self.transformer_model = transformer.Transformer(DMODEL, ENCODER_NUM, DECODER_NUM, HEADNUM,DFF, len(self.src_dict_set), )
+
     def init_dict(self):
         logging.info("initializing src and dst dict... ")
         src_dict_p = WMT_2014_EN2DE_DICT["src"]
@@ -23,12 +32,17 @@ class WMT2014EN2DE:
         if os.path.exists(src_dict_p) and os.path.exists(dst_dict_p):
             logging.info("get src and dst str dict files, load dict from files")
             with open(src_dict_p) as f:
-                src_dict_set = [x.strip() for x in f.readlines()]
+                src_dict_set = list(
+                    src_dict_set.union({x.strip() for x in f.readlines()})
+                )
             with open(dst_dict_p) as f:
-                dst_dict_set = [x.strip() for x in f.readlines()]
+                dst_dict_set = list(
+                    dst_dict_set.union({x.strip() for x in f.readlines()})
+                )
         else:
             raise LookupError(
-                "can't find one or more follow dict files: \n%s\n%s" % (src_dict_p, dst_dict_p)
+                "can't find one or more follow dict files: \n%s\n%s"
+                % (src_dict_p, dst_dict_p)
             )
             """
             重新生成dict的耗时非常久,这里推荐使用shell:
@@ -52,7 +66,12 @@ class WMT2014EN2DE:
                         dst_dict_set = dst_dict_set.union(set(dststr.split()))
                     logging.info(
                         "%d/%d  src dict size: %d, dst dict size: %d"
-                        % (cnt, len(dataloader.dataset), len(src_dict_set), len(dst_dict_set))
+                        % (
+                            cnt,
+                            len(dataloader.dataset),
+                            len(src_dict_set),
+                            len(dst_dict_set),
+                        )
                     )
             logging.info(
                 "generate dict done, writing to file:\n %s\n%s"
@@ -70,6 +89,18 @@ class WMT2014EN2DE:
             % (src_dict_p, len(src_dict_set), dst_dict_p, len(dst_dict_set))
         )
         return src_dict_set, dst_dict_set
+
+    def init_word2token(self, dictlist):
+        ret = {}
+        for i in range(len(dictlist)):
+            ret[dictlist[i]] = i
+        return ret
+
+    def init_token2word(self, dictlist):
+        ret = {}
+        for i in range(len(dictlist)):
+            ret[i] = dictlist[i]
+        return ret
 
     def train(self):
         pass

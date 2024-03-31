@@ -18,6 +18,17 @@ WMT_2014_EN2DE_DICT = {
     "src": "../datas/WMT_2014_en-de/vocab.50K.en",
     "dst": "../datas/WMT_2014_en-de/vocab.50K.de",
 }
+'''
+使用shell统计数据得到,作为固定参数:
+awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'  \
+    ../datas/WMT_2014_en-de/train.en ../datas/WMT_2014_en-de/test.en ../datas/WMT_2014_en-de/dev.en
+'''
+WMT_2014_EN_MAX_SEQ_LEN = 150
+'''
+awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'  \
+    ../datas/WMT_2014_en-de/train.de ../datas/WMT_2014_en-de/test.de ../datas/WMT_2014_en-de/dev.de
+'''
+WMT_2014_DE_MAX_SEQ_LEN = 150
 
 # IWSLT dataset - EN2VI(英语->越南语)
 IWSLT_15_EN2VI_TRAIN = {
@@ -36,7 +47,28 @@ IWSLT_15_EN2VI_DICT = {
     "src": "../datas/IWSLT_15_en-vi/vocab.50K.en",
     "dst": "../datas/IWSLT_15_en-vi/vocab.50K.de",
 }
+'''
+使用shell统计数据得到,作为固定参数:
+awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'  \
+    ../datas/IWSLT_15_en-vi/train.en ../datas/IWSLT_15_en-vi/test.en ../datas/IWSLT_15_en-vi/dev.en
+
+'''
+IWSLT_15_EN_MAX_SEQ_LEN = 650
+'''
+awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'  \
+    ../datas/IWSLT_15_en-vi/train.vi ../datas/IWSLT_15_en-vi/test.vi ../datas/IWSLT_15_en-vi/dev.vi
+'''
+IWSLT_15_VI_MAX_SEQ_LEN = 860
 
 # train configs
 BATCHSIZE = 10000
 SPECIALKEYS=["<unk>", "<s>", "</s>", "<pad>"]
+PADSTR=SPECIALKEYS[-1]
+
+# model configs
+ENCODER_NUM = 6
+DECODER_NUM = 6
+
+DMODEL = 512
+HEADNUM = 8
+DFF = 2048
