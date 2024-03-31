@@ -1,6 +1,18 @@
 from transformer import decoder, encoder, transformer
 from dataloader import wmt_train_dataloader, wmt_test_dataloader, wmt_dev_dataloader
-from configs import WMT_2014_EN2DE_DICT, BATCHSIZE, SPECIALKEYS, PADSTR,DMODEL,ENCODER_NUM,DECODER_NUM,HEADNUM,DFF
+from configs import (
+    WMT_2014_EN2DE_DICT,
+    BATCHSIZE,
+    SPECIALKEYS,
+    PADSTR,
+    DMODEL,
+    ENCODER_NUM,
+    DECODER_NUM,
+    HEADNUM,
+    DFF,
+    WMT_2014_EN_MAX_SEQ_LEN,
+    WMT_2014_DE_MAX_SEQ_LEN,
+)
 import os, logging
 
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
@@ -20,8 +32,18 @@ class WMT2014EN2DE:
         self.src_token2word = self.init_token2word(self.src_dict_set)
         self.dst_token2word = self.init_token2word(self.dst_dict_set)
         self.padtoken = self.src_word2token[PADSTR]
-        
-        self.transformer_model = transformer.Transformer(DMODEL, ENCODER_NUM, DECODER_NUM, HEADNUM,DFF, len(self.src_dict_set), )
+
+        self.transformer_model = transformer.Transformer(
+            DMODEL,
+            ENCODER_NUM,
+            DECODER_NUM,
+            HEADNUM,
+            DFF,
+            len(self.src_dict_set),
+            WMT_2014_EN_MAX_SEQ_LEN,
+            WMT_2014_DE_MAX_SEQ_LEN,
+            self.padtoken,
+        )
 
     def init_dict(self):
         logging.info("initializing src and dst dict... ")
@@ -103,10 +125,12 @@ class WMT2014EN2DE:
         return ret
 
     def train(self):
-        pass
+        self.transformer_model.train()
+        
 
     def test(self):
-        pass
+        self.transformer_model.eval()
+        
 
 
 if __name__ == "__main__":
