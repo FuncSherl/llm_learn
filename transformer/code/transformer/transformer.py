@@ -14,7 +14,7 @@ DMODEL = 512
 H = 8
 DFF = 2048
 
-DICTSIZE = 3000
+DICTSIZE = 50000
 INPUTMAXSEQLEN = 1000
 
 
@@ -30,8 +30,8 @@ class Transformer(nn.Module):
         dictsize_out=None,
         input_maxseqlen=INPUTMAXSEQLEN,
         output_maxseqlen=INPUTMAXSEQLEN,
-        special_tokens_in=[None, None, None, None],
-        special_tokens_out=[None, None, None, None],
+        padding_tokens_in=None,
+        padding_tokens_out=None,
     ):
         super(Transformer, self).__init__()
 
@@ -40,16 +40,15 @@ class Transformer(nn.Module):
         self.decoder_num = decoder_num
         self.headnum = headnum
         self.dff = dff
+
         self.dictsize_src = dictsize_in
         self.dictsize_dst = dictsize_out
+
         self.input_maxseqlen = input_maxseqlen
         self.output_maxseqlen = output_maxseqlen
-        self.padding_idx_src, self.start_idx_src, self.end_idx_src, self.unk_idx_src = (
-            special_tokens_in
-        )
-        self.padding_idx_dst, self.start_idx_dst, self.end_idx_dst, self.unk_idx_dst = (
-            special_tokens_out
-        )
+
+        self.padding_idx_src = padding_tokens_in
+        self.padding_idx_dst = padding_tokens_out
 
         # embedding
         self.embedding_src = nn.Embedding(
@@ -59,8 +58,8 @@ class Transformer(nn.Module):
         # dst and src have their own dicts, need 2 embedding layer
         if self.dictsize_dst is not None:
             assert (
-                None not in special_tokens_out
-            ), "should specify all dst special tokens like: pad/unk/start/end"
+                self.padding_idx_dst is not None
+            ), "should specify padding dst special token id"
 
             self.embedding_dst = nn.Embedding(
                 self.dictsize_dst, self.dmodel, padding_idx=self.padding_idx_dst
@@ -69,12 +68,7 @@ class Transformer(nn.Module):
         # they have much same tokens, this can save a lot spaces
         # origin transformer paper use this way: https://arxiv.org/abs/1706.03762
         else:
-            (
-                self.padding_idx_dst,
-                self.start_idx_dst,
-                self.end_idx_dst,
-                self.unk_idx_dst,
-            ) = special_tokens_in
+            self.padding_idx_dst = padding_tokens_in
 
         self.pos_embedding = self.getPosEncoding(self.input_maxseqlen, self.dmodel)
         self.pos_embedding.requires_grad = False
@@ -109,7 +103,7 @@ class Transformer(nn.Module):
         return self.forward_test(tokens)
 
     def forward_train(self, src_tokens, decoder_input_tokens):
-        tep = self.embedding(src_tokens)
+        tep = self.embedding_src(src_tokens)
         tep += self.pos_embedding[: src_tokens.shape[-1]]
         encoder_kvs = self.encoder(tep)
 
@@ -118,7 +112,7 @@ class Transformer(nn.Module):
         mask = self.atten_max_mask[:batch_seqlen, :batch_seqlen]
 
         # decoder input
-        tep_dec = self.embedding(decoder_input_tokens)
+        tep_dec = self.embedding_dst(decoder_input_tokens)
         tep_dec += self.pos_embedding[:batch_seqlen]
 
         decoder_out = self.decoder(tep_dec, encoder_kvs, mask)
@@ -128,12 +122,12 @@ class Transformer(nn.Module):
         return prob
 
     def forward_test(self, src_tokens):
-        tep = self.embedding(src_tokens)
+        tep = self.embedding_src(src_tokens)
         tep += self.pos_embedding
         encoder_kvs = self.encoder(tep)
 
-        # train need mask
-        batch_seqlen = label_tokens.shape[-1]
+        # test need mask
+        batch_seqlen = src_tokens.shape[1]  #bs x seqlen x dmodel
         mask = self.atten_max_mask[:batch_seqlen, :batch_seqlen]
         decoder_out = self.decoder(self.last_out, encoder_kvs, mask)
 

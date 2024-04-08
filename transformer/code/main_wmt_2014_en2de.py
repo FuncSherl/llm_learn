@@ -12,6 +12,9 @@ from configs import (
     DFF,
     WMT_2014_EN_MAX_SEQ_LEN,
     WMT_2014_DE_MAX_SEQ_LEN,
+    UNKSTR,
+    STARTSTR,
+    ENDSTR,
 )
 import os, logging
 
@@ -19,19 +22,35 @@ logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=loggi
 
 
 class WMT2014EN2DE:
-    def __init__(self) -> None:
+    def __init__(self, use_same_dict=True) -> None:
         self.train_dataloader = wmt_train_dataloader
         self.test_dataloader = wmt_test_dataloader
         self.dev_dataloader = wmt_dev_dataloader
 
         self.src_dict_set, self.dst_dict_set = self.init_dict()
 
+        # use same dict for en and de, this is special for this job, for other languages maybe different
+        if use_same_dict:
+            self.src_dict_set = self.src_dict_set | self.dst_dict_set
+            self.dst_dict_set = self.src_dict_set
+
         self.src_word2token = self.init_word2token(self.src_dict_set)
         self.dst_word2token = self.init_word2token(self.dst_dict_set)
 
         self.src_token2word = self.init_token2word(self.src_dict_set)
         self.dst_token2word = self.init_token2word(self.dst_dict_set)
-        self.padtoken = self.src_word2token[PADSTR]
+        self.src_special_tokens = [
+            self.src_word2token[PADSTR],
+            self.src_word2token[STARTSTR],
+            self.src_word2token[ENDSTR],
+            self.src_word2token[UNKSTR],
+        ]
+        self.dst_special_tokens = [
+            self.dst_word2token[PADSTR],
+            self.dst_word2token[STARTSTR],
+            self.dst_word2token[ENDSTR],
+            self.dst_word2token[UNKSTR],
+        ]
 
         self.transformer_model = transformer.Transformer(
             DMODEL,
@@ -40,9 +59,11 @@ class WMT2014EN2DE:
             HEADNUM,
             DFF,
             len(self.src_dict_set),
+            None if use_same_dict else len(self.dst_dict_set),
             WMT_2014_EN_MAX_SEQ_LEN,
             WMT_2014_DE_MAX_SEQ_LEN,
-            self.padtoken,
+            self.src_special_tokens,
+            self.dst_special_tokens,
         )
 
     def init_dict(self):
@@ -126,11 +147,9 @@ class WMT2014EN2DE:
 
     def train(self):
         self.transformer_model.train()
-        
 
     def test(self):
         self.transformer_model.eval()
-        
 
 
 if __name__ == "__main__":
