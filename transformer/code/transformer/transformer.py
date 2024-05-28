@@ -78,6 +78,7 @@ class Transformer(nn.Module):
         else:
             self.padding_idx_dst = self.padding_idx_src
             self.start_idx_dst = self.start_idx_src
+            self.dictsize_dst = self.dictsize_src
 
         self.pos_embedding = self.getPosEncoding(self.input_maxseqlen, self.dmodel)
         self.pos_embedding.requires_grad = False

@@ -18,6 +18,7 @@ from configs import (
 )
 import os, logging
 import numpy as np
+import torch as pt
 
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 
@@ -155,9 +156,9 @@ class WMT2014EN2DE:
         for indi, i in enumerate(bsword):
             for indj, j in enumerate(i):
                 if j in wtdict:
-                    ret[i][j] = wtdict[j]
+                    ret[indi][indj] = wtdict[j]
                 else:
-                    ret[i][j] = wtdict[UNKSTR]
+                    ret[indi][indj] = wtdict[UNKSTR]
         return ret
 
     def batch_token2word(self, bstoken, wtdict):
@@ -184,6 +185,8 @@ class WMT2014EN2DE:
         for d, l in self.test_dataloader:
             dat_src = self.batch_word2token(d, self.src_word2token)
             dat_dst = self.batch_word2token(d, self.dst_word2token)
+            dat_src = pt.tensor(dat_src, dtype=pt.int32)
+            dat_dst = pt.tensor(dat_dst, dtype=pt.int32)
             ret = self.transformer_model(dat_src, dat_dst)
             ret = self.batch_token2word(ret, self.dst_token2word)
 
