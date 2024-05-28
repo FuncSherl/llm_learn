@@ -69,6 +69,8 @@ if __name__ == "__main__":
     cnt = 0
     for d, l in wmt_train_dataloader:
         cnt += len(d)
+        # print (d)
+        # print (l)
         for i in range(len(d)):
             # print (d[i], " --> ", l[i])
             pass

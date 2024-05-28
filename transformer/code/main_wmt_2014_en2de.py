@@ -17,6 +17,7 @@ from configs import (
     ENDSTR,
 )
 import os, logging
+import numpy as np
 
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 
@@ -145,12 +146,51 @@ class WMT2014EN2DE:
             ret[i] = dictlist[i]
         return ret
 
+    def batch_word2token(self, bsword, wtdict):
+        maxlen = 0
+        for i in bsword:
+            maxlen = max(maxlen, len(i))
+        ret = np.zeros([len(bsword), maxlen], dtype=np.int32) + wtdict[PADSTR]
+        for indi, i in enumerate(bsword):
+            for indj, j in enumerate(i):
+                if j in wtdict:
+                    ret[i][j] = wtdict[j]
+                else:
+                    ret[i][j] = wtdict[UNKSTR]
+        return ret
+
+    def batch_token2word(self, bstoken, wtdict):
+        ret = []
+        for indi, i in enumerate(bstoken):
+            kep = []
+            for indj, j in enumerate(i):
+                if j in wtdict:
+                    kep.append(wtdict[j])
+                else:
+                    kep.append(UNKSTR)
+            ret.append(kep)
+        return ret
+
     def train(self):
         self.transformer_model.train()
+        for d, l in self.train_dataloader:
+            dat_src = self.batch_word2token(d, self.src_word2token)
+            dat_dst = self.batch_word2token(d, self.dst_word2token)
+            self.transformer_model(dat_src, dat_dst)
 
     def test(self):
         self.transformer_model.eval()
+        for d, l in self.test_dataloader:
+            dat_src = self.batch_word2token(d, self.src_word2token)
+            dat_dst = self.batch_word2token(d, self.dst_word2token)
+            ret = self.transformer_model(dat_src, dat_dst)
+            ret = self.batch_token2word(ret, self.dst_token2word)
+
+            for i in range(len(d)):
+                print(d[i], " --> ", l[i])
+                print(ret[i], "\n")
 
 
 if __name__ == "__main__":
     wmtproc = WMT2014EN2DE()
+    wmtproc.test()

@@ -30,8 +30,8 @@ class Transformer(nn.Module):
         dictsize_out=None,
         input_maxseqlen=INPUTMAXSEQLEN,
         output_maxseqlen=INPUTMAXSEQLEN,
-        padding_tokens_in=None,
-        padding_tokens_out=None,
+        special_tokens_in=None,
+        special_tokens_out=None,
     ):
         super(Transformer, self).__init__()
 
@@ -47,8 +47,16 @@ class Transformer(nn.Module):
         self.input_maxseqlen = input_maxseqlen
         self.output_maxseqlen = output_maxseqlen
 
-        self.padding_idx_src = padding_tokens_in
-        self.padding_idx_dst = padding_tokens_out
+        self.padding_idx_src, self.start_idx_src, self.end_idx_src = (
+            special_tokens_in[0],
+            special_tokens_in[1],
+            special_tokens_in[2],
+        )
+        self.padding_idx_dst, self.start_idx_dst, self.end_idx_dst = (
+            special_tokens_out[0],
+            special_tokens_out[1],
+            special_tokens_out[2],
+        )
 
         # embedding
         self.embedding_src = nn.Embedding(
@@ -68,7 +76,8 @@ class Transformer(nn.Module):
         # they have much same tokens, this can save a lot spaces
         # origin transformer paper use this way: https://arxiv.org/abs/1706.03762
         else:
-            self.padding_idx_dst = padding_tokens_in
+            self.padding_idx_dst = self.padding_idx_src
+            self.start_idx_dst = self.start_idx_src
 
         self.pos_embedding = self.getPosEncoding(self.input_maxseqlen, self.dmodel)
         self.pos_embedding.requires_grad = False
@@ -104,6 +113,7 @@ class Transformer(nn.Module):
 
     def forward_train(self, src_tokens, decoder_input_tokens):
         tep = self.embedding_src(src_tokens)
+
         tep += self.pos_embedding[: src_tokens.shape[-1]]
         encoder_kvs = self.encoder(tep)
 
@@ -121,19 +131,29 @@ class Transformer(nn.Module):
         prob = self.softmax(decoder_out_logit)
         return prob
 
+    """
+        input one or more token, out one token probs
+    """
+
     def forward_test(self, src_tokens):
         tep = self.embedding_src(src_tokens)
-        tep += self.pos_embedding
+        tep += self.pos_embedding[: src_tokens.shape[-1]]
         encoder_kvs = self.encoder(tep)
 
-        # test need mask
-        batch_seqlen = src_tokens.shape[1]  #bs x seqlen x dmodel
-        mask = self.atten_max_mask[:batch_seqlen, :batch_seqlen]
-        decoder_out = self.decoder(self.last_out, encoder_kvs, mask)
+        batch_s = src_tokens.shape[0]  # bs x seqlen x dmodel
+        # mask = self.atten_max_mask[:batch_seqlen, :batch_seqlen]
+        outputs_tokens = [[self.start_idx_dst]] * batch_s
 
-        decoder_out_logit = self.pre_softmax_linear(decoder_out)
-        prob = self.softmax(decoder_out_logit)
-        return prob
+        while outputs_tokens[-1] != self.end_idx_dst:
+            tensor_out = pt.tensor(outputs_tokens, dtype=pt.float32, device="cuda")
+            decoder_out = self.decoder(outputs_tokens, encoder_kvs)
+
+            decoder_out_logit = self.pre_softmax_linear(decoder_out)
+            probs = self.softmax(decoder_out_logit)
+            ntoken = pt.argmax(probs).cpu().numpy()
+            outputs_tokens.append(ntoken)
+
+        return outputs_tokens
 
     @staticmethod
     def getPosEncoding(input_maxseqlen, dmodel):
