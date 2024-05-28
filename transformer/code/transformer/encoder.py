@@ -15,8 +15,8 @@ class TransformerEncoder(nn.Module):
 
         self.multhead_att = [
             MultiHeadAttention(
-                self.dmodel / self.headnum,
-                self.dmodel / self.headnum,
+                self.dmodel // self.headnum,
+                self.dmodel // self.headnum,
                 self.dmodel,
                 self.headnum,
             )

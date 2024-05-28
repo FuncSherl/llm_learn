@@ -15,8 +15,8 @@ class TransformerDecoder(nn.Module):
 
         self.multhead_att_fir = [
             MultiHeadAttention(
-                self.dmodel / self.headnum,
-                self.dmodel / self.headnum,
+                self.dmodel // self.headnum,
+                self.dmodel // self.headnum,
                 self.dmodel,
                 self.headnum,
             )
@@ -25,8 +25,8 @@ class TransformerDecoder(nn.Module):
 
         self.multhead_att_sec = [
             MultiHeadAttention(
-                self.dmodel / self.headnum,
-                self.dmodel / self.headnum,
+                self.dmodel // self.headnum,
+                self.dmodel // self.headnum,
                 self.dmodel,
                 self.headnum,
             )
