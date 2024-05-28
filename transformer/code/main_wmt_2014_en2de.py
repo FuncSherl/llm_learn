@@ -35,6 +35,9 @@ class WMT2014EN2DE:
             self.src_dict_set = self.src_dict_set | self.dst_dict_set
             self.dst_dict_set = self.src_dict_set
 
+        self.src_dict_set = list(self.src_dict_set)
+        self.dst_dict_set = list(self.dst_dict_set)
+
         self.src_word2token = self.init_word2token(self.src_dict_set)
         self.dst_word2token = self.init_word2token(self.dst_dict_set)
 
@@ -76,13 +79,11 @@ class WMT2014EN2DE:
         if os.path.exists(src_dict_p) and os.path.exists(dst_dict_p):
             logging.info("get src and dst str dict files, load dict from files")
             with open(src_dict_p) as f:
-                src_dict_set = list(
-                    src_dict_set.union({x.strip() for x in f.readlines()})
-                )
+                src_dict_set = src_dict_set.union({x.strip() for x in f.readlines()})
+
             with open(dst_dict_p) as f:
-                dst_dict_set = list(
-                    dst_dict_set.union({x.strip() for x in f.readlines()})
-                )
+                dst_dict_set = dst_dict_set.union({x.strip() for x in f.readlines()})
+
         else:
             raise LookupError(
                 "can't find one or more follow dict files: \n%s\n%s"
