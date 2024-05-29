@@ -148,7 +148,7 @@ class Transformer(nn.Module):
 
         cnt = 0
         while np.any(outputs_tokens[:, -1] != self.end_idx_dst):
-            logging.info("running %d decoder iter..." % (cnt))
+            logging.info("test running %d decoder iter..." % (cnt))
             logging.info("get output size: " + str(outputs_tokens.shape))
             tensor_out = pt.tensor(outputs_tokens, dtype=pt.int32)
             dst_emb = self.embedding_dst(tensor_out)
@@ -159,8 +159,11 @@ class Transformer(nn.Module):
             probs = self.softmax(decoder_out_logit)[:, -1:]
             ntoken = pt.argmax(probs, -1).cpu().numpy()
             outputs_tokens = np.append(outputs_tokens, ntoken, axis=-1)
-            logging.info("running %d decoder iter done\n" % (cnt))
+            logging.info("test running %d decoder iter done\n" % (cnt))
             cnt += 1
+            if outputs_tokens.shape[-1] >= self.output_maxseqlen:
+                logging.info("test get maxseqlen, finishing...")
+                break
 
         return outputs_tokens
 
