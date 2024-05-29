@@ -2,7 +2,7 @@ import numpy as np
 import torch as pt
 import torch.nn as nn
 import torch.nn.functional as F
-import math
+import math, logging
 from .decoder import TransformerDecoder
 from .encoder import TransformerEncoder
 
@@ -138,21 +138,29 @@ class Transformer(nn.Module):
 
     def forward_test(self, src_tokens):
         tep = self.embedding_src(src_tokens)
-        tep += self.pos_embedding[: src_tokens.shape[-1]]
+        tep += self.pos_embedding[None, : src_tokens.shape[-1]]
         encoder_kvs = self.encoder(tep)
 
         batch_s = src_tokens.shape[0]  # bs x seqlen x dmodel
         # mask = self.atten_max_mask[:batch_seqlen, :batch_seqlen]
-        outputs_tokens = [[self.start_idx_dst]] * batch_s
+        outputs_tokens = np.full([batch_s, 1], self.start_idx_dst, dtype=np.int32)
+        logging.info("encoder done, get kvs: " + str(encoder_kvs.shape))
 
-        while outputs_tokens[-1] != self.end_idx_dst:
-            tensor_out = pt.tensor(outputs_tokens, dtype=pt.float32, device="cuda")
-            decoder_out = self.decoder(outputs_tokens, encoder_kvs)
+        cnt = 0
+        while np.any(outputs_tokens[:, -1] != self.end_idx_dst):
+            logging.info("running %d decoder iter..." % (cnt))
+            logging.info("get output size: " + str(outputs_tokens.shape))
+            tensor_out = pt.tensor(outputs_tokens, dtype=pt.int32)
+            dst_emb = self.embedding_dst(tensor_out)
+            dst_emb += self.pos_embedding[None, : tensor_out.shape[-1]]
+            decoder_out = self.decoder(dst_emb, encoder_kvs)
 
             decoder_out_logit = self.pre_softmax_linear(decoder_out)
-            probs = self.softmax(decoder_out_logit)
-            ntoken = pt.argmax(probs).cpu().numpy()
-            outputs_tokens.append(ntoken)
+            probs = self.softmax(decoder_out_logit)[:, -1:]
+            ntoken = pt.argmax(probs, -1).cpu().numpy()
+            outputs_tokens = np.append(outputs_tokens, ntoken, axis=-1)
+            logging.info("running %d decoder iter done\n" % (cnt))
+            cnt += 1
 
         return outputs_tokens
 

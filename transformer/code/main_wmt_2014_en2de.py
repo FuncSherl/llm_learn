@@ -176,6 +176,8 @@ class WMT2014EN2DE:
     def train(self):
         self.transformer_model.train()
         for d, l in self.train_dataloader:
+            d = [x.split() for x in d]
+            l = [x.split() for x in l]
             dat_src = self.batch_word2token(d, self.src_word2token)
             dat_dst = self.batch_word2token(d, self.dst_word2token)
             self.transformer_model(dat_src, dat_dst)
@@ -183,6 +185,8 @@ class WMT2014EN2DE:
     def test(self):
         self.transformer_model.eval()
         for d, l in self.test_dataloader:
+            d = [x.split() for x in d]
+            l = [x.split() for x in l]
             dat_src = self.batch_word2token(d, self.src_word2token)
             dat_dst = self.batch_word2token(d, self.dst_word2token)
             dat_src = pt.tensor(dat_src, dtype=pt.int32)

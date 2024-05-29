@@ -27,16 +27,16 @@ class MultiHeadAttention(nn.Module):
         )
 
     @staticmethod
-    def dot_product_attention(q, k, v, mask = None, mask_val = -1e9):
-        tep = pt.matmul(q, k.t())
-        dk_sqr = pt.sqrt(k.shape[-1])
+    def dot_product_attention(q, k, v, mask=None, mask_val=-1e9):
+        tep = pt.bmm(q, k.transpose(1, 2))
+        dk_sqr = math.sqrt(k.shape[-1])
         tep = tep / dk_sqr
         if mask:
             tep = tep.masked_fill(mask, mask_val)
         tep = F.softmax(tep)
         return pt.matmul(tep, v)
 
-    def forward(self, q, k, v, mask = None):
+    def forward(self, q, k, v, mask=None):
         qall = [f(q) for f in self.q_linears]
         kall = [f(k) for f in self.k_linears]
         vall = [f(v) for f in self.v_linears]
@@ -57,7 +57,7 @@ class FeedForward(nn.Module):
         self.hidden = nn.Linear(self.dinput, self.dff, bias=True)
         self.relu = nn.ReLU()
         self.out = nn.Linear(self.dff, self.dinput, bias=True)
-        
+
     def forward(self, x):
         tep = self.hidden(x)
         tep = self.relu(tep)
