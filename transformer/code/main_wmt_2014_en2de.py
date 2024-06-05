@@ -24,7 +24,8 @@ logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=loggi
 
 
 class WMT2014EN2DE:
-    def __init__(self, use_same_dict=True) -> None:
+    def __init__(self, use_same_dict=True, device="cpu") -> None:
+        self.device = device
         self.train_dataloader = wmt_train_dataloader
         self.test_dataloader = wmt_test_dataloader
         self.dev_dataloader = wmt_dev_dataloader
@@ -69,7 +70,7 @@ class WMT2014EN2DE:
             WMT_2014_DE_MAX_SEQ_LEN,
             self.src_special_tokens,
             self.dst_special_tokens,
-        )
+        ).to(self.device)
 
     def init_dict(self):
         logging.info("initializing src and dst dict... ")
@@ -189,8 +190,8 @@ class WMT2014EN2DE:
             l = [x.split() for x in l]
             dat_src = self.batch_word2token(d, self.src_word2token)
             dat_dst = self.batch_word2token(d, self.dst_word2token)
-            dat_src = pt.tensor(dat_src, dtype=pt.int32)
-            dat_dst = pt.tensor(dat_dst, dtype=pt.int32)
+            dat_src = pt.tensor(dat_src, dtype=pt.int32).to(self.device)
+            dat_dst = pt.tensor(dat_dst, dtype=pt.int32).to(self.device)
             ret = self.transformer_model(dat_src, dat_dst)
             ret = self.batch_token2word(ret, self.dst_token2word)
 
@@ -200,5 +201,16 @@ class WMT2014EN2DE:
 
 
 if __name__ == "__main__":
-    wmtproc = WMT2014EN2DE()
+    cuda_ava = pt.cuda.is_available()
+    logging.info("cuda available: " + str(cuda_ava))
+    if cuda_ava:
+        logging.info("cuda device count: " + str(pt.cuda.device_count()))
+        cur_ind = pt.cuda.current_device()
+        logging.info(
+            "current device index: %d  name: %s"
+            % (cur_ind, pt.cuda.get_device_name(cur_ind))
+        )
+
+    device = pt.device("cuda" if pt.cuda.is_available else "cpu")
+    wmtproc = WMT2014EN2DE(use_same_dict=True, device=device)
     wmtproc.test()

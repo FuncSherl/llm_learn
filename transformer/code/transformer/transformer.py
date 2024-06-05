@@ -138,7 +138,7 @@ class Transformer(nn.Module):
 
     def forward_test(self, src_tokens):
         tep = self.embedding_src(src_tokens)
-        tep += self.pos_embedding[None, : src_tokens.shape[-1]]
+        tep += self.pos_embedding[None, : src_tokens.shape[-1]].to(tep.device)
         encoder_kvs = self.encoder(tep)
 
         batch_s = src_tokens.shape[0]  # bs x seqlen x dmodel
