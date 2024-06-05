@@ -137,8 +137,9 @@ class Transformer(nn.Module):
     """
 
     def forward_test(self, src_tokens):
+        device = src_tokens.device
         tep = self.embedding_src(src_tokens)
-        tep += self.pos_embedding[None, : src_tokens.shape[-1]].to(tep.device)
+        tep += self.pos_embedding[None, : src_tokens.shape[-1]].to(device)
         encoder_kvs = self.encoder(tep)
 
         batch_s = src_tokens.shape[0]  # bs x seqlen x dmodel
@@ -150,9 +151,9 @@ class Transformer(nn.Module):
         while np.any(outputs_tokens[:, -1] != self.end_idx_dst):
             logging.info("test running %d decoder iter..." % (cnt))
             logging.info("get output size: " + str(outputs_tokens.shape))
-            tensor_out = pt.tensor(outputs_tokens, dtype=pt.int32)
+            tensor_out = pt.tensor(outputs_tokens, dtype=pt.int32).to(device)
             dst_emb = self.embedding_dst(tensor_out)
-            dst_emb += self.pos_embedding[None, : tensor_out.shape[-1]]
+            dst_emb += self.pos_embedding[None, : tensor_out.shape[-1]].to(device)
             decoder_out = self.decoder(dst_emb, encoder_kvs)
 
             decoder_out_logit = self.pre_softmax_linear(decoder_out)
