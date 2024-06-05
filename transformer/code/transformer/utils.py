@@ -12,15 +12,15 @@ class MultiHeadAttention(nn.Module):
         self.dmodel = dmodel
         self.headnum = headnum
         # first linear layers
-        self.q_linears = [
-            nn.Linear(self.dmodel, self.dk, bias=False) for x in range(self.headnum)
-        ]
-        self.k_linears = [
-            nn.Linear(self.dmodel, self.dk, bias=False) for x in range(self.headnum)
-        ]
-        self.v_linears = [
-            nn.Linear(self.dmodel, self.dv, bias=False) for x in range(self.headnum)
-        ]
+        self.q_linears = nn.ModuleList(
+            [nn.Linear(self.dmodel, self.dk, bias=False) for x in range(self.headnum)]
+        )
+        self.k_linears = nn.ModuleList(
+            [nn.Linear(self.dmodel, self.dk, bias=False) for x in range(self.headnum)]
+        )
+        self.v_linears = nn.ModuleList(
+            [nn.Linear(self.dmodel, self.dv, bias=False) for x in range(self.headnum)]
+        )
         # last linear
         self.last_linear = nn.Linear(
             self.dk * self.headnum, self.dk * self.headnum, bias=False
@@ -62,19 +62,3 @@ class FeedForward(nn.Module):
         tep = self.hidden(x)
         tep = self.relu(tep)
         return self.out(tep)
-
-
-# def multi_head_attention(q, k, v, dk, dv, headnum):
-#     qall = [nn.Linear(q.shape[-1], dk, bias=False)(q) for x in range(headnum)]
-#     kall = [nn.Linear(k.shape[-1], dk, bias=False)(k) for x in range(headnum)]
-#     vall = [nn.Linear(v.shape[-1], dv, bias=False)(v) for x in range(headnum)]
-
-#     headall = [dot_product_attention(qall[x], kall[x], vall[x]) for x in range(headnum)]
-#     head_cat = pt.cat(headall, dim=-1)
-#     return nn.Linear(dk*headnum, dk*headnum, bias=False)(head_cat)
-
-
-# def feed_forward(x, dff):
-#     hidden = nn.Linear(x.shape[-1], dff, bias=True)(x)
-#     relu = nn.ReLU()(hidden)
-#     return nn.Linear(dff, x.shape[-1], bias=True)(relu)

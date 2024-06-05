@@ -13,29 +13,35 @@ class TransformerDecoder(nn.Module):
         self.headnum = headnum
         self.dff = dff
 
-        self.multhead_att_fir = [
-            MultiHeadAttention(
-                self.dmodel // self.headnum,
-                self.dmodel // self.headnum,
-                self.dmodel,
-                self.headnum,
-            )
-            for i in range(self.repeat_num)
-        ]
+        self.multhead_att_fir = nn.ModuleList(
+            [
+                MultiHeadAttention(
+                    self.dmodel // self.headnum,
+                    self.dmodel // self.headnum,
+                    self.dmodel,
+                    self.headnum,
+                )
+                for i in range(self.repeat_num)
+            ]
+        )
 
-        self.multhead_att_sec = [
-            MultiHeadAttention(
-                self.dmodel // self.headnum,
-                self.dmodel // self.headnum,
-                self.dmodel,
-                self.headnum,
-            )
-            for i in range(self.repeat_num)
-        ]
+        self.multhead_att_sec = nn.ModuleList(
+            [
+                MultiHeadAttention(
+                    self.dmodel // self.headnum,
+                    self.dmodel // self.headnum,
+                    self.dmodel,
+                    self.headnum,
+                )
+                for i in range(self.repeat_num)
+            ]
+        )
 
-        self.feed_forward = [FeedForward(dmodel, dff) for i in range(self.repeat_num)]
+        self.feed_forward = nn.ModuleList(
+            [FeedForward(dmodel, dff) for i in range(self.repeat_num)]
+        )
 
-    def forward(self, x, encoder_kv, mask = None):
+    def forward(self, x, encoder_kv, mask=None):
         tep = x
         for i in range(self.repeat_num):
             # sublayer 1
