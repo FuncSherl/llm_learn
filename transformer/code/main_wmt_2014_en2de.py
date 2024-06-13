@@ -193,20 +193,21 @@ class WMT2014EN2DE:
 
         loss_func = pt.nn.CrossEntropyLoss(label_smoothing=0.1)  # 定义交叉熵损失函数
         # 定义优化器
-        optim = pt.optim.Adam(
+        optimadam = pt.optim.Adam(
             self.transformer_model.parameters(), lr=2e-3, betas=(0.9, 0.98), eps=1e-9
         )
 
         # 定义学习率衰减策略
         def lr_strategy(step):
+            step+=1
             return math.pow(DMODEL, -0.5) * min(
                 math.pow(step, -0.5), step * math.pow(WARMUP_STEPS, -1.5)
             )
 
-        sched = pt.optim.lr_scheduler.LambdaLR(optim, lr_strategy)
+        sched = pt.optim.lr_scheduler.LambdaLR(optimadam, lr_strategy)
         for epoch in range(EPOCHS):
             for stepcnt, (d, l) in enumerate(self.train_dataloader):
-                optim.zero_grad()  # 梯度清零
+                optimadam.zero_grad()  # 梯度清零
                 d = [x.split() for x in d]
                 l = [x.split() for x in l]
                 dat_src = self.batch_word2token(d, self.src_word2token)
@@ -219,8 +220,8 @@ class WMT2014EN2DE:
                     logit.flatten(0, -2), dat_dst[:, 1:].flatten()
                 )  # 计算损失
                 loss.backward()  # 反向传播
+                optimadam.step()  # 更新参数
                 sched.step()
-                optim.step()  # 更新参数
 
                 if stepcnt % 10 == 0:
                     logging.info(
