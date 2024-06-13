@@ -149,17 +149,28 @@ class WMT2014EN2DE:
             ret[i] = dictlist[i]
         return ret
 
-    def batch_word2token(self, bsword, wtdict):
+    def batch_word2token(self, bsword, wtdict, addstart=True, addend=True):
         maxlen = 0
         for i in bsword:
             maxlen = max(maxlen, len(i))
-        ret = np.zeros([len(bsword), maxlen], dtype=np.int32) + wtdict[PADSTR]
+        ret = np.full(
+            [len(bsword), maxlen + int(addstart) + int(addend)],
+            fill_value=wtdict[PADSTR],
+            dtype=np.int32,
+        )
+        if addstart:
+            ret[:, 0] = wtdict[STARTSTR]
+
+        ed_id = wtdict[ENDSTR]
+        st_ind = int(addstart)
         for indi, i in enumerate(bsword):
             for indj, j in enumerate(i):
                 if j in wtdict:
-                    ret[indi][indj] = wtdict[j]
+                    ret[indi][indj + st_ind] = wtdict[j]
                 else:
-                    ret[indi][indj] = wtdict[UNKSTR]
+                    ret[indi][indj + st_ind] = wtdict[UNKSTR]
+            if addend:
+                ret[indi][len(i) + st_ind] = ed_id
         return ret
 
     def batch_token2word(self, bstoken, wtdict):
@@ -176,12 +187,34 @@ class WMT2014EN2DE:
 
     def train(self):
         self.transformer_model.train()
-        for d, l in self.train_dataloader:
+
+        loss_func = pt.nn.CrossEntropyLoss(label_smoothing=0.1)  # 定义交叉熵损失函数
+        optim = pt.optim.Adam(
+            self.transformer_model.parameters(), lr=2e-3, betas=(0.9, 0.98), eps=1e-9
+        )  # 定义优化器
+        sched = pt.optim.lr_scheduler.StepLR(
+            optim, step_size=3, gamma=0.5
+        )  # 定义学习率衰减策略
+
+        for stepcnt, (d, l) in enumerate(self.train_dataloader):
+            optim.zero_grad()  # 梯度清零
             d = [x.split() for x in d]
             l = [x.split() for x in l]
             dat_src = self.batch_word2token(d, self.src_word2token)
-            dat_dst = self.batch_word2token(d, self.dst_word2token)
-            self.transformer_model(dat_src, dat_dst)
+            dat_dst = self.batch_word2token(l, self.dst_word2token)
+            dat_src = pt.tensor(dat_src, dtype=pt.int32).to(self.device)
+            dat_dst = pt.tensor(dat_dst, dtype=pt.int32).to(self.device)
+            logit = self.transformer_model(dat_src, dat_dst[:, :-1])
+
+            loss = loss_func(logit.flatten(0, -2), dat_dst[:, 1:].flatten())  # 计算损失
+            loss.backward()  # 反向传播
+            optim.step()  # 更新参数
+
+            if stepcnt % 10 == 0:
+                logging.info(
+                    "batch [%d/%d]: loss: %f"
+                    % (stepcnt, len(self.train_dataloader), loss)
+                )
 
     def test(self):
         self.transformer_model.eval()
@@ -189,10 +222,10 @@ class WMT2014EN2DE:
             d = [x.split() for x in d]
             l = [x.split() for x in l]
             dat_src = self.batch_word2token(d, self.src_word2token)
-            dat_dst = self.batch_word2token(d, self.dst_word2token)
+            # dat_dst = self.batch_word2token(d, self.dst_word2token)
             dat_src = pt.tensor(dat_src, dtype=pt.int32).to(self.device)
-            dat_dst = pt.tensor(dat_dst, dtype=pt.int32).to(self.device)
-            ret = self.transformer_model(dat_src, dat_dst)
+            # dat_dst = pt.tensor(dat_dst, dtype=pt.int32).to(self.device)
+            ret = self.transformer_model(dat_src, None)
             ret = self.batch_token2word(ret, self.dst_token2word)
 
             for i in range(len(d)):
@@ -213,4 +246,5 @@ if __name__ == "__main__":
 
     device = pt.device("cuda" if pt.cuda.is_available else "cpu")
     wmtproc = WMT2014EN2DE(use_same_dict=True, device=device)
-    wmtproc.test()
+    wmtproc.train()
+    # wmtproc.test()

@@ -113,24 +113,25 @@ class Transformer(nn.Module):
         return self.forward_test(tokens)
 
     def forward_train(self, src_tokens, decoder_input_tokens):
+        device = src_tokens.device
         tep = self.embedding_src(src_tokens)
 
-        tep += self.pos_embedding[: src_tokens.shape[-1]]
+        tep += self.pos_embedding[None, : src_tokens.shape[-1]].to(device)
         encoder_kvs = self.encoder(tep)
 
         # train need mask
         batch_seqlen = decoder_input_tokens.shape[-1]
-        mask = self.atten_max_mask[:batch_seqlen, :batch_seqlen]
+        mask = self.atten_max_mask[None, :batch_seqlen, :batch_seqlen].to(device)
 
         # decoder input
         tep_dec = self.embedding_dst(decoder_input_tokens)
-        tep_dec += self.pos_embedding[:batch_seqlen]
+        tep_dec += self.pos_embedding[None, :batch_seqlen].to(device)
 
         decoder_out = self.decoder(tep_dec, encoder_kvs, mask)
 
         decoder_out_logit = self.pre_softmax_linear(decoder_out)
-        prob = self.softmax(decoder_out_logit)
-        return prob
+        # prob = self.softmax(decoder_out_logit)
+        return decoder_out_logit
 
     """
         input one or more token, out one token probs
