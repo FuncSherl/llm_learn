@@ -28,10 +28,7 @@ class Seq2SeqDataset(Dataset):
         return self.src_fp[index].strip(), self.dst_fp[index].strip()
 
     def __del__(self):
-        if not self.src_fp.closed:
-            self.src_fp.close()
-        if not self.dst_fp.closed:
-            self.dst_fp.close()
+        pass
 
 
 # WMT - 2014 - EN2DE dataset
