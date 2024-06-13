@@ -199,7 +199,7 @@ class WMT2014EN2DE:
 
         # 定义学习率衰减策略
         def lr_strategy(step):
-            step += 1
+            step += 1 # incase step = -1
             return math.pow(DMODEL, -0.5) * min(
                 math.pow(step, -0.5), step * math.pow(WARMUP_STEPS, -1.5)
             )
