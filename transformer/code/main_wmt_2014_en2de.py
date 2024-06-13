@@ -16,10 +16,12 @@ from configs import (
     UNKSTR,
     STARTSTR,
     ENDSTR,
+    WARMUP_STEPS,
 )
 import os, logging
 import numpy as np
 import torch as pt
+import math
 
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 
@@ -190,12 +192,18 @@ class WMT2014EN2DE:
         self.transformer_model.train()
 
         loss_func = pt.nn.CrossEntropyLoss(label_smoothing=0.1)  # 定义交叉熵损失函数
+        # 定义优化器
         optim = pt.optim.Adam(
             self.transformer_model.parameters(), lr=2e-3, betas=(0.9, 0.98), eps=1e-9
-        )  # 定义优化器
-        sched = pt.optim.lr_scheduler.StepLR(
-            optim, step_size=3, gamma=0.5
-        )  # 定义学习率衰减策略
+        )
+
+        # 定义学习率衰减策略
+        def lr_strategy(step):
+            math.pow(DMODEL, -0.5) * min(
+                math.pow(step, -0.5), step * math.pow(WARMUP_STEPS, -1.5)
+            )
+
+        sched = pt.optim.lr_scheduler.LambdaLR(optim, lr_strategy)
         for epoch in range(EPOCHS):
             for stepcnt, (d, l) in enumerate(self.train_dataloader):
                 optim.zero_grad()  # 梯度清零
@@ -211,6 +219,7 @@ class WMT2014EN2DE:
                     logit.flatten(0, -2), dat_dst[:, 1:].flatten()
                 )  # 计算损失
                 loss.backward()  # 反向传播
+                sched.step()
                 optim.step()  # 更新参数
 
                 if stepcnt % 10 == 0:
