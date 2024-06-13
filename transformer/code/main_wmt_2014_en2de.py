@@ -199,7 +199,7 @@ class WMT2014EN2DE:
 
         # 定义学习率衰减策略
         def lr_strategy(step):
-            step+=1
+            step += 1
             return math.pow(DMODEL, -0.5) * min(
                 math.pow(step, -0.5), step * math.pow(WARMUP_STEPS, -1.5)
             )
@@ -213,12 +213,13 @@ class WMT2014EN2DE:
                 dat_src = self.batch_word2token(d, self.src_word2token)
                 dat_dst = self.batch_word2token(l, self.dst_word2token)
                 dat_src = pt.tensor(dat_src, dtype=pt.int32).to(self.device)
-                dat_dst = pt.tensor(dat_dst, dtype=pt.int32).to(self.device)
+                dat_dst = pt.tensor(dat_dst, dtype=pt.int64).to(self.device)
                 logit = self.transformer_model(dat_src, dat_dst[:, :-1])
+                # flatten datas
+                logit = logit.flatten(0, -2)
+                dat_dst = dat_dst[:, 1:].flatten()
 
-                loss = loss_func(
-                    logit.flatten(0, -2), dat_dst[:, 1:].flatten()
-                )  # 计算损失
+                loss = loss_func(logit, dat_dst)  # 计算损失
                 loss.backward()  # 反向传播
                 optimadam.step()  # 更新参数
                 sched.step()

@@ -31,9 +31,9 @@ class MultiHeadAttention(nn.Module):
         tep = pt.bmm(q, k.transpose(1, 2))
         dk_sqr = math.sqrt(k.shape[-1])
         tep = tep / dk_sqr
-        if mask:
+        if mask != None:
             tep = tep.masked_fill(mask, mask_val)
-        tep = F.softmax(tep)
+        tep = F.softmax(tep, dim=-1)
         return pt.matmul(tep, v)
 
     def forward(self, q, k, v, mask=None):
