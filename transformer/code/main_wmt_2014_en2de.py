@@ -2,6 +2,7 @@ from transformer import decoder, encoder, transformer
 from dataloader import wmt_train_dataloader, wmt_test_dataloader, wmt_dev_dataloader
 from configs import (
     WMT_2014_EN2DE_DICT,
+    EPOCHS,
     BATCHSIZE,
     SPECIALKEYS,
     PADSTR,
@@ -195,26 +196,28 @@ class WMT2014EN2DE:
         sched = pt.optim.lr_scheduler.StepLR(
             optim, step_size=3, gamma=0.5
         )  # 定义学习率衰减策略
+        for epoch in range(EPOCHS):
+            for stepcnt, (d, l) in enumerate(self.train_dataloader):
+                optim.zero_grad()  # 梯度清零
+                d = [x.split() for x in d]
+                l = [x.split() for x in l]
+                dat_src = self.batch_word2token(d, self.src_word2token)
+                dat_dst = self.batch_word2token(l, self.dst_word2token)
+                dat_src = pt.tensor(dat_src, dtype=pt.int32).to(self.device)
+                dat_dst = pt.tensor(dat_dst, dtype=pt.int32).to(self.device)
+                logit = self.transformer_model(dat_src, dat_dst[:, :-1])
 
-        for stepcnt, (d, l) in enumerate(self.train_dataloader):
-            optim.zero_grad()  # 梯度清零
-            d = [x.split() for x in d]
-            l = [x.split() for x in l]
-            dat_src = self.batch_word2token(d, self.src_word2token)
-            dat_dst = self.batch_word2token(l, self.dst_word2token)
-            dat_src = pt.tensor(dat_src, dtype=pt.int32).to(self.device)
-            dat_dst = pt.tensor(dat_dst, dtype=pt.int32).to(self.device)
-            logit = self.transformer_model(dat_src, dat_dst[:, :-1])
+                loss = loss_func(
+                    logit.flatten(0, -2), dat_dst[:, 1:].flatten()
+                )  # 计算损失
+                loss.backward()  # 反向传播
+                optim.step()  # 更新参数
 
-            loss = loss_func(logit.flatten(0, -2), dat_dst[:, 1:].flatten())  # 计算损失
-            loss.backward()  # 反向传播
-            optim.step()  # 更新参数
-
-            if stepcnt % 10 == 0:
-                logging.info(
-                    "batch [%d/%d]: loss: %f"
-                    % (stepcnt, len(self.train_dataloader), loss)
-                )
+                if stepcnt % 10 == 0:
+                    logging.info(
+                        "epoch [%d/%d] batch [%d/%d]: loss: %f"
+                        % (epoch, EPOCHS, stepcnt, len(self.train_dataloader), loss)
+                    )
 
     def test(self):
         self.transformer_model.eval()

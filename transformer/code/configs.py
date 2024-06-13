@@ -61,7 +61,8 @@ awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'
 IWSLT_15_VI_MAX_SEQ_LEN = 860
 
 # train configs
-BATCHSIZE = 100
+EPOCHS=1
+BATCHSIZE = 10
 SPECIALKEYS = ["<unk>", "<s>", "</s>", "<pad>"]
 UNKSTR = SPECIALKEYS[0]
 STARTSTR = SPECIALKEYS[1]
