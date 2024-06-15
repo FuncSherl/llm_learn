@@ -211,7 +211,7 @@ class WMT2014EN2DE:
         sched = pt.optim.lr_scheduler.LambdaLR(optimadam, lr_strategy)
 
         # prepare path
-        current_file_path = os.path.abspath(__file__)
+        current_file_path = os.path.dirname(__file__)
         checkpoint_dirname = os.path.join(
             current_file_path, "%s_checkpoints" % (self.modelname)
         )
