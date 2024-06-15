@@ -151,7 +151,8 @@ class Transformer(nn.Module):
         logging.info("encoder done, get kvs: " + str(encoder_kvs.shape))
 
         cnt = 0
-        while np.any(outputs_tokens[:, -1] != self.end_idx_dst):
+        end_flags = np.full([batch_s], False, dtype=np.bool_)
+        while np.any(~end_flags):
             logging.info("test running %d decoder iter..." % (cnt))
             logging.info("get output size: " + str(outputs_tokens.shape))
             tensor_out = pt.tensor(outputs_tokens, dtype=pt.int32).to(device)
@@ -163,6 +164,7 @@ class Transformer(nn.Module):
             probs = self.softmax(decoder_out_logit)[:, -1:]
             ntoken = pt.argmax(probs, -1).cpu().numpy()
             outputs_tokens = np.append(outputs_tokens, ntoken, axis=-1)
+            end_flags = end_flags | (ntoken == self.end_idx_dst)
             logging.info("test running %d decoder iter done\n" % (cnt))
             cnt += 1
             if outputs_tokens.shape[-1] >= self.output_maxseqlen:
