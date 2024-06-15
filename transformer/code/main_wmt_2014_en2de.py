@@ -22,12 +22,14 @@ from configs import (
 import os, logging
 import numpy as np
 import torch as pt
-import math
+import math, time, datetime
 
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 
 
 class WMT2014EN2DE:
+    modelname = "WMT2014EN2DE"
+
     def __init__(self, use_same_dict=True, device="cpu") -> None:
         self.device = device
         self.train_dataloader = wmt_train_dataloader
@@ -190,7 +192,7 @@ class WMT2014EN2DE:
             ret.append(kep)
         return ret
 
-    def train(self):
+    def train(self, load_checkpoint_p=None):
         self.transformer_model.train()
 
         loss_func = pt.nn.CrossEntropyLoss(label_smoothing=0.1)  # 定义交叉熵损失函数
@@ -207,8 +209,33 @@ class WMT2014EN2DE:
             )
 
         sched = pt.optim.lr_scheduler.LambdaLR(optimadam, lr_strategy)
-        for epoch in range(EPOCHS):
+
+        # prepare path
+        current_file_path = os.path.abspath(__file__)
+        checkpoint_dirname = os.path.join(
+            current_file_path, "%s_checkpoints" % (self.modelname)
+        )
+        os.makedirs(checkpoint_dirname, exist_ok=True)
+
+        # args
+        loss = 0
+        show_gap = 20
+        start_epoch = 0
+        test_gap = 5000
+        last_checkpint = None
+
+        # load checkpoint if exists
+        if load_checkpoint_p is not None:
+            checkpoint = pt.load(load_checkpoint_p)
+            self.transformer_model.load_state_dict(checkpoint["model_state_dict"])
+            optimadam.load_state_dict(checkpoint["optimizer_state_dict"])
+            start_epoch = checkpoint["epoch"]
+            sched.load_state_dict(checkpoint["lr_scheduler_state_dict"])
+
+        for epoch in range(start_epoch, EPOCHS):
+            self.transformer_model.train()
             for stepcnt, (d, l) in enumerate(self.train_dataloader):
+                st_time = time.time()
                 optimadam.zero_grad()  # 梯度清零
                 d = [x.split() for x in d]
                 l = [x.split() for x in l]
@@ -225,16 +252,56 @@ class WMT2014EN2DE:
                 loss.backward()  # 反向传播
                 optimadam.step()  # 更新参数
                 sched.step()
+                ed_time = time.time()
 
-                if stepcnt % 10 == 0:
+                if stepcnt % show_gap == 0:
                     logging.info(
-                        "epoch [%d/%d] batch [%d/%d]: loss: %f"
-                        % (epoch, EPOCHS, stepcnt, len(self.train_dataloader), loss)
+                        "epoch [%d/%d] batch [%d/%d]  loss: %f    time: %f s/iter"
+                        % (
+                            epoch,
+                            EPOCHS,
+                            stepcnt,
+                            len(self.train_dataloader),
+                            loss,
+                            (ed_time - st_time),
+                        )
                     )
+                if stepcnt % test_gap == 0:
+                    logging.info("Testing ...")
+                    self.test(10)
 
-    def test(self):
+            # model save per epoch
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            self.transformer_model.eval()
+            checkpoint = {
+                "model_state_dict": self.transformer_model.state_dict(),
+                "optimizer_state_dict": optimadam.state_dict(),
+                "epoch": epoch,
+                "lr_scheduler_state_dict": sched.state_dict(),
+            }
+            modeln = "%s_%s_epoch_%d_loss_%.3f.pkl" % (
+                self.modelname,
+                timestamp,
+                epoch,
+                loss,
+            )
+
+            modeln = os.path.join(checkpoint_dirname, modeln)
+            logging.info("epoch [%d/%d] Saving model to: %s" % (epoch, EPOCHS, modeln))
+            pt.save(checkpoint, modeln)
+            last_checkpint = modeln
+
+    def test(self, testcnt=-1, load_checkpoint_p=None):
+        # load checkpoint if exists
+        if load_checkpoint_p is not None:
+            checkpoint = pt.load(load_checkpoint_p)
+            self.transformer_model.load_state_dict(checkpoint["model_state_dict"])
+
         self.transformer_model.eval()
-        for d, l in self.test_dataloader:
+        for stepcnt, (d, l) in enumerate(self.test_dataloader):
+            if testcnt > 0 and stepcnt >= testcnt:
+                break
+
             d = [x.split() for x in d]
             l = [x.split() for x in l]
             dat_src = self.batch_word2token(d, self.src_word2token)

@@ -19,12 +19,13 @@ WMT_2014_EN2DE_DICT = {
     "dst": "../datas/WMT_2014_en-de/vocab.50K.de",
 }
 """
-使用shell统计数据得到,作为固定参数:
+使用shell统计数据得到,作为固定参数, 这里取一个略大的值:
 awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'  \
     ../datas/WMT_2014_en-de/train.en ../datas/WMT_2014_en-de/test.en ../datas/WMT_2014_en-de/dev.en
 """
 WMT_2014_EN_MAX_SEQ_LEN = 150
 """
+这里取一个略大的值
 awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'  \
     ../datas/WMT_2014_en-de/train.de ../datas/WMT_2014_en-de/test.de ../datas/WMT_2014_en-de/dev.de
 """
@@ -48,27 +49,28 @@ IWSLT_15_EN2VI_DICT = {
     "dst": "../datas/IWSLT_15_en-vi/vocab.50K.de",
 }
 """
-使用shell统计数据得到,作为固定参数:
+使用shell统计数据得到,作为固定参数, 这里取一个略大的值:
 awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'  \
     ../datas/IWSLT_15_en-vi/train.en ../datas/IWSLT_15_en-vi/test.en ../datas/IWSLT_15_en-vi/dev.en
 
 """
 IWSLT_15_EN_MAX_SEQ_LEN = 650
 """
+这里取一个略大的值
 awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'  \
     ../datas/IWSLT_15_en-vi/train.vi ../datas/IWSLT_15_en-vi/test.vi ../datas/IWSLT_15_en-vi/dev.vi
 """
 IWSLT_15_VI_MAX_SEQ_LEN = 860
 
 # train configs
-EPOCHS=4
+EPOCHS = 4
 BATCHSIZE = 10
 SPECIALKEYS = ["<unk>", "<s>", "</s>", "<pad>"]
 UNKSTR = SPECIALKEYS[0]
 STARTSTR = SPECIALKEYS[1]
 ENDSTR = SPECIALKEYS[2]
 PADSTR = SPECIALKEYS[3]
-WARMUP_STEPS=4000
+WARMUP_STEPS = 4000
 DROPOUT_PROB = 0.1
 
 # model configs
