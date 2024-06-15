@@ -193,8 +193,6 @@ class WMT2014EN2DE:
         return ret
 
     def train(self, load_checkpoint_p=None):
-        self.transformer_model.train()
-
         loss_func = pt.nn.CrossEntropyLoss(label_smoothing=0.1)  # 定义交叉熵损失函数
         # 定义优化器
         optimadam = pt.optim.Adam(
@@ -233,8 +231,8 @@ class WMT2014EN2DE:
             sched.load_state_dict(checkpoint["lr_scheduler_state_dict"])
 
         for epoch in range(start_epoch, EPOCHS):
-            self.transformer_model.train()
             for stepcnt, (d, l) in enumerate(self.train_dataloader):
+                self.transformer_model.train()
                 st_time = time.time()
                 optimadam.zero_grad()  # 梯度清零
                 d = [x.split() for x in d]
