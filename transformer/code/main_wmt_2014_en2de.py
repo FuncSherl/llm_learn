@@ -221,7 +221,7 @@ class WMT2014EN2DE:
         loss = 0
         show_gap = 20
         start_epoch = 0
-        test_gap = 5000
+        test_gap = 2000
         last_checkpint = None
 
         # load checkpoint if exists
@@ -270,7 +270,7 @@ class WMT2014EN2DE:
                 # test
                 if (stepcnt + 1) % test_gap == 0:
                     logging.info("Testing ...")
-                    self.test(10)
+                    self.test(4)
 
             # model save per epoch
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
