@@ -17,6 +17,7 @@ from configs import (
     STARTSTR,
     ENDSTR,
     WARMUP_STEPS,
+    DROPOUT_PROB,
 )
 import os, logging
 import numpy as np
@@ -73,6 +74,7 @@ class WMT2014EN2DE:
             WMT_2014_DE_MAX_SEQ_LEN,
             self.src_special_tokens,
             self.dst_special_tokens,
+            DROPOUT_PROB,
         ).to(self.device)
 
     def init_dict(self):
@@ -199,7 +201,7 @@ class WMT2014EN2DE:
 
         # 定义学习率衰减策略
         def lr_strategy(step):
-            step += 1 # incase step = -1
+            step += 1  # incase step = -1
             return math.pow(DMODEL, -0.5) * min(
                 math.pow(step, -0.5), step * math.pow(WARMUP_STEPS, -1.5)
             )

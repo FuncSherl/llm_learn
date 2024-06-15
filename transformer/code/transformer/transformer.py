@@ -32,6 +32,7 @@ class Transformer(nn.Module):
         output_maxseqlen=INPUTMAXSEQLEN,
         special_tokens_in=None,
         special_tokens_out=None,
+        dropout_prob=0.1,
     ):
         super(Transformer, self).__init__()
 
@@ -57,6 +58,7 @@ class Transformer(nn.Module):
             special_tokens_out[1],
             special_tokens_out[2],
         )
+        self.dropout_prob = dropout_prob
 
         # embedding
         self.embedding_src = nn.Embedding(
@@ -85,12 +87,12 @@ class Transformer(nn.Module):
 
         # encoder
         self.encoder = TransformerEncoder(
-            self.encoder_num, self.dmodel, self.dff, self.headnum
+            self.encoder_num, self.dmodel, self.dff, self.headnum, self.dropout_prob
         )
 
         # decoder
         self.decoder = TransformerDecoder(
-            self.decoder_num, self.dmodel, self.dff, self.headnum
+            self.decoder_num, self.dmodel, self.dff, self.headnum, self.dropout_prob
         )
 
         # pre softmax linear
