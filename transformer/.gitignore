@@ -5,3 +5,4 @@ datas/**/*.de
 datas/**/*.vi
 datas/**/*.en-de
 datas/**/*.en-vi
+code/*_checkpoints/
