@@ -254,6 +254,7 @@ class WMT2014EN2DE:
                 sched.step()
                 ed_time = time.time()
 
+                # show log
                 if stepcnt % show_gap == 0:
                     logging.info(
                         "epoch [%d/%d] batch [%d/%d]  loss: %f    time: %f s/iter"
@@ -266,7 +267,8 @@ class WMT2014EN2DE:
                             (ed_time - st_time),
                         )
                     )
-                if stepcnt % test_gap == 0:
+                # test
+                if (stepcnt + 1) % test_gap == 0:
                     logging.info("Testing ...")
                     self.test(10)
 
