@@ -52,7 +52,7 @@ iwslt_dataset_dev = Seq2SeqDataset(IWSLT_15_EN2VI_DEV["src"], IWSLT_15_EN2VI_DEV
 
 
 # dataloaders
-def get_train_dataloader(batchsize):
+def get_train_dataloader(batchsize, *args, **kwargs):
     return DataLoader(
         dataset=iwslt_dataset_train,  # 传入的数据集, 必须参数
         batch_size=batchsize,  # 输出的batch大小
@@ -61,7 +61,7 @@ def get_train_dataloader(batchsize):
     )
 
 
-def get_test_dataloader(batchsize):
+def get_test_dataloader(batchsize, *args, **kwargs):
     return DataLoader(
         dataset=iwslt_dataset_test,  # 传入的数据集, 必须参数
         batch_size=batchsize,  # 输出的batch大小
@@ -70,7 +70,7 @@ def get_test_dataloader(batchsize):
     )
 
 
-def get_dev_dataloader(batchsize):
+def get_dev_dataloader(batchsize, *args, **kwargs):
     return DataLoader(
         dataset=iwslt_dataset_dev,  # 传入的数据集, 必须参数
         batch_size=batchsize,  # 输出的batch大小
@@ -161,14 +161,14 @@ SRC_DICT_SET = list(SRC_DICT_SET)
 DST_DICT_SET = list(DST_DICT_SET)
 
 
-def init_word2token(dictlist):
+def init_word2token(dictlist, *args, **kwargs):
     ret = {}
     for i in range(len(dictlist)):
         ret[dictlist[i]] = i
     return ret
 
 
-def init_token2word(dictlist):
+def init_token2word(dictlist, *args, **kwargs):
     ret = {}
     for i in range(len(dictlist)):
         ret[i] = dictlist[i]
@@ -182,7 +182,7 @@ SRC_TOKEN2WORD = init_token2word(SRC_DICT_SET)
 DST_TOKEN2WORD = init_token2word(DST_DICT_SET)
 
 
-def batch_word2token(bsword, wtdict, addstart=True, addend=True):
+def batch_word2token(bsword, wtdict, addstart=True, addend=True, *args, **kwargs):
     maxlen = 0
     for i in bsword:
         maxlen = max(maxlen, len(i))
@@ -207,7 +207,7 @@ def batch_word2token(bsword, wtdict, addstart=True, addend=True):
     return ret
 
 
-def batch_token2word(bstoken, wtdict):
+def batch_token2word(bstoken, wtdict, *args, **kwargs):
     ret = []
     for indi, i in enumerate(bstoken):
         kep = []
