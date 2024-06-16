@@ -1,33 +1,29 @@
+import os, logging
+
+logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
+
 from transformer import decoder, encoder, transformer
-from ..datas.WMT_2014_en2de import dataloader
+from datas.WMT_2014_en2de import dataloader
 from configs import (
     EPOCHS,
     BATCHSIZE,
-    SPECIALKEYS,
-    PADSTR,
     DMODEL,
     ENCODER_NUM,
     DECODER_NUM,
     HEADNUM,
     DFF,
-    UNKSTR,
-    STARTSTR,
-    ENDSTR,
     WARMUP_STEPS,
     DROPOUT_PROB,
 )
-import os, logging
 import numpy as np
 import torch as pt
 import math, time, datetime
-
-logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO)
 
 
 class WMT2014EN2DE:
     modelname = "WMT2014EN2DE"
 
-    def __init__(self, use_same_dict=True, device="cpu") -> None:
+    def __init__(self, device="cpu") -> None:
         self.device = device
         self.train_dataloader = dataloader.get_train_dataloader(BATCHSIZE)
         self.test_dataloader = dataloader.get_test_dataloader(BATCHSIZE)
@@ -210,6 +206,6 @@ if __name__ == "__main__":
         )
 
     device = pt.device("cuda" if pt.cuda.is_available else "cpu")
-    wmtproc = WMT2014EN2DE(use_same_dict=True, device=device)
+    wmtproc = WMT2014EN2DE(device=device)
     wmtproc.train()
     # wmtproc.test()

@@ -1,22 +1,25 @@
+import os
+import os.path as op
+
 # WMT dataset - EN2DE(英语->德语)
 WMT_2014_EN2DE_TRAIN = {
-    "src": "./train.en",
-    "dst": "./train.de",
+    "src": op.join(os.path.dirname(__file__), "./train.en"),
+    "dst": op.join(os.path.dirname(__file__), "./train.de"),
 }
 
 WMT_2014_EN2DE_TEST = {
-    "src": "./test.en",
-    "dst": "./test.de",
+    "src": op.join(os.path.dirname(__file__), "./test.en"),
+    "dst": op.join(os.path.dirname(__file__), "./test.de"),
 }
 
 WMT_2014_EN2DE_DEV = {
-    "src": "./dev.en",
-    "dst": "./dev.de",
+    "src": op.join(os.path.dirname(__file__), "./dev.en"),
+    "dst": op.join(os.path.dirname(__file__), "./dev.de"),
 }
 
 WMT_2014_EN2DE_DICT = {
-    "src": "./vocab.50K.en",
-    "dst": "./vocab.50K.de",
+    "src": op.join(os.path.dirname(__file__), "./vocab.50K.en"),
+    "dst": op.join(os.path.dirname(__file__), "./vocab.50K.de"),
 }
 """
 使用shell统计数据得到,作为固定参数, 这里取一个略大的值:
