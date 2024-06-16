@@ -4,6 +4,8 @@ from .configs import (
     IWSLT_15_EN2VI_TRAIN,
     IWSLT_15_EN2VI_TEST,
     IWSLT_15_EN2VI_DEV,
+    IWSLT_15_EN_MAX_SEQ_LEN,
+    IWSLT_15_VI_MAX_SEQ_LEN,
 )
 
 
@@ -67,6 +69,9 @@ def get_dev_dataloader(batchsize):
         num_workers=2,  # 进程数, 0表示只有主进程
     )
 
+
+MAX_SEQLEN_SRC = IWSLT_15_EN_MAX_SEQ_LEN
+MAX_SEQLEN_DST = IWSLT_15_VI_MAX_SEQ_LEN
 
 if __name__ == "__main__":
     cnt = 0

@@ -1,33 +1,36 @@
-# WMT dataset - EN2DE(英语->德语)
-WMT_2014_EN2DE_TRAIN = {
+# IWSLT dataset - EN2VI(英语->越南语)
+IWSLT_15_EN2VI_TRAIN = {
     "src": "./train.en",
     "dst": "./train.de",
 }
-
-WMT_2014_EN2DE_TEST = {
+IWSLT_15_EN2VI_TEST = {
     "src": "./test.en",
     "dst": "./test.de",
 }
-
-WMT_2014_EN2DE_DEV = {
+IWSLT_15_EN2VI_DEV = {
     "src": "./dev.en",
     "dst": "./dev.de",
 }
-
-WMT_2014_EN2DE_DICT = {
-    "src": "./vocab.50K.en",
-    "dst": "./vocab.50K.de",
+IWSLT_15_EN2VI_DICT = {
+    "src": "./vocab.en",
+    "dst": "./vocab.de",
 }
 """
 使用shell统计数据得到,作为固定参数, 这里取一个略大的值:
 awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'  \
     ./train.en ./test.en ./dev.en
+
 """
-WMT_2014_EN_MAX_SEQ_LEN = 150
+IWSLT_15_EN_MAX_SEQ_LEN = 650
 """
 这里取一个略大的值
 awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'  \
-    ./train.de ./test.de ./dev.de
+    ./train.vi ./test.vi ./dev.vi
 """
-WMT_2014_DE_MAX_SEQ_LEN = 150
+IWSLT_15_VI_MAX_SEQ_LEN = 860
 
+SPECIALKEYS = ["<unk>", "<s>", "</s>", "<pad>"]
+UNKSTR = SPECIALKEYS[0]
+STARTSTR = SPECIALKEYS[1]
+ENDSTR = SPECIALKEYS[2]
+PADSTR = SPECIALKEYS[3]
