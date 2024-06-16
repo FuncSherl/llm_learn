@@ -71,41 +71,8 @@ class WMT2014EN2DE:
             DROPOUT_PROB,
         ).to(self.device)
 
-    def batch_word2token(self, bsword, wtdict, addstart=True, addend=True):
-        maxlen = 0
-        for i in bsword:
-            maxlen = max(maxlen, len(i))
-        ret = np.full(
-            [len(bsword), maxlen + int(addstart) + int(addend)],
-            fill_value=wtdict[PADSTR],
-            dtype=np.int32,
-        )
-        if addstart:
-            ret[:, 0] = wtdict[STARTSTR]
-
-        ed_id = wtdict[ENDSTR]
-        st_ind = int(addstart)
-        for indi, i in enumerate(bsword):
-            for indj, j in enumerate(i):
-                if j in wtdict:
-                    ret[indi][indj + st_ind] = wtdict[j]
-                else:
-                    ret[indi][indj + st_ind] = wtdict[UNKSTR]
-            if addend:
-                ret[indi][len(i) + st_ind] = ed_id
-        return ret
-
-    def batch_token2word(self, bstoken, wtdict):
-        ret = []
-        for indi, i in enumerate(bstoken):
-            kep = []
-            for indj, j in enumerate(i):
-                if j in wtdict:
-                    kep.append(wtdict[j])
-                else:
-                    kep.append(UNKSTR)
-            ret.append(kep)
-        return ret
+        self.batch_word2token = dataloader.batch_word2token
+        self.batch_token2word = dataloader.batch_token2word
 
     def train(self, load_checkpoint_p=None):
         loss_func = pt.nn.CrossEntropyLoss(label_smoothing=0.1)  # 定义交叉熵损失函数

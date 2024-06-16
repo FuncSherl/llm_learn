@@ -29,6 +29,9 @@ awk  'BEGIN{kep=0;} {if(NF>kep){kep=NF; print $0; print NF;}; } END{print kep;}'
 """
 IWSLT_15_VI_MAX_SEQ_LEN = 860
 
+# use same dict for en and de, this is special for this job, for other languages maybe different
+USE_SAME_DICT = True
+
 SPECIALKEYS = ["<unk>", "<s>", "</s>", "<pad>"]
 UNKSTR = SPECIALKEYS[0]
 STARTSTR = SPECIALKEYS[1]
