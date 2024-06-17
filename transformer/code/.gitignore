@@ -6,3 +6,4 @@ datas/**/*.vi
 datas/**/*.en-de
 datas/**/*.en-vi
 *_checkpoints/
+__datacache__/

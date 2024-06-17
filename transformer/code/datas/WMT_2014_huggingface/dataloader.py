@@ -1,5 +1,6 @@
 import os, logging
 from .configs import DATASET_NAME, DATASET_SUB_NAMES
+from torch.utils.data import DataLoader
 from datasets import (
     load_dataset_builder,
     load_dataset,
@@ -7,7 +8,7 @@ from datasets import (
     get_dataset_config_names,
 )
 
-cache_dir = os.path.dirname(__file__)
+cache_dir = os.path.join(os.path.dirname(__file__), "__datacache__")
 
 logging.info("%s: Getting all sub datasets names..." % (DATASET_NAME))
 DATASET_SUB_NAMES = get_dataset_config_names(DATASET_NAME)
@@ -19,28 +20,64 @@ SPLITS = get_dataset_split_names(DATASET_NAME, example_subdat)
 logging.info("%s: Split of %s is %s" % (DATASET_NAME, example_subdat, str(SPLITS)))
 
 
-# dataloaders ['cs-en', 'de-en', 'fr-en', 'hi-en', 'ru-en']
-def get_train_dataloader(batchsize, language_pair="de-en", *args, **kwargs):
-    assert language_pair in DATASET_SUB_NAMES, "language_pair should in %s, get: %s" % (
+def loaddataset(bs, subsetname, split):
+    assert subsetname in DATASET_SUB_NAMES, "language_pair should in %s, get: %s" % (
         str(DATASET_SUB_NAMES),
-        language_pair,
+        subsetname,
     )
-    dataset = load_dataset(
+    return load_dataset(
         DATASET_NAME,
-        language_pair,
-        split="train",
+        subsetname,
+        split=split,
         trust_remote_code=True,
         cache_dir=cache_dir,
     )
 
 
-def get_test_dataloader(batchsize, *args, **kwargs):
-    pass
+# dataloaders ['cs-en', 'de-en', 'fr-en', 'hi-en', 'ru-en']
+def get_train_dataloader(
+    batchsize, language_src="en", language_dst="de", *args, **kwargs
+):
+    subsetname = language_src + "-" + language_dst
+    if subsetname not in DATASET_SUB_NAMES:
+        subsetname = language_dst + "-" + language_src
+    dataset = loaddataset(batchsize, subsetname, "train")
+
+    return DataLoader(
+        dataset=dataset,  # 传入的数据集, 必须参数
+        batch_size=batchsize,  # 输出的batch大小
+        shuffle=True,  # 数据是否打乱
+        num_workers=2,  # 进程数, 0表示只有主进程
+        collate_fn=lambda dat: (
+            dat["translation"][language_src],
+            dat["translation"][language_dst],
+        ),
+    )
 
 
-def get_dev_dataloader(batchsize, *args, **kwargs):
-    pass
+def get_test_dataloader(
+    batchsize, language_src="en", language_dst="de", *args, **kwargs
+):
+    subsetname = language_src + "-" + language_dst
+    if subsetname not in DATASET_SUB_NAMES:
+        subsetname = language_dst + "-" + language_src
+    dataset = loaddataset(batchsize, subsetname, "test")
+
+
+def get_dev_dataloader(
+    batchsize, language_src="en", language_dst="de", *args, **kwargs
+):
+    subsetname = language_src + "-" + language_dst
+    if subsetname not in DATASET_SUB_NAMES:
+        subsetname = language_dst + "-" + language_src
+    dataset = loaddataset(batchsize, subsetname, "validation")
 
 
 if __name__ == "__main__":
-    pass
+    dat = get_train_dataloader(5)
+    cnt = 0
+    for i in dat:
+        if cnt > 5:
+            break
+        print(i)
+        cnt += 1
