@@ -95,11 +95,24 @@ def get_dev_dataloader(
     )
 
 
+MAX_SEQLEN_SRC = 256
+MAX_SEQLEN_DST = 256
+
+SRC_DST_DICT_PATH = None
+
 if __name__ == "__main__":
-    dat = get_train_dataloader(5)
+    bs = 100
+    dats = [get_train_dataloader(bs), get_test_dataloader(bs), get_dev_dataloader(bs)]
+    src_maxlen = 0
+    dst_maxlen = 0
     cnt = 0
-    for i in dat:
-        if cnt > 5:
-            break
-        print(i)
-        cnt += 1
+    for dat in dats:
+        for i, j in dat:
+            # if cnt > 5:
+            #     break
+            # print(i)
+            cnt += 1
+            for src, dst in zip(i, j):
+                src_maxlen = max(src_maxlen, len(src.split(" ")))
+                dst_maxlen = max(dst_maxlen, len(dst.split(" ")))
+    print("finally get max len of src: %d   dst: %d" % (src_maxlen, dst_maxlen))
